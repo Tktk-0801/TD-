@@ -2,10 +2,10 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>3人vs敵バトル（キャラ消さない版）</title>
+<title>3人vs敵バトル（全キャラ実装版）</title>
 <style>
   body{background:#0b0b0b;color:#fff;font-family:sans-serif;text-align:center;}
-  #gameContainer{width:960px;margin:18px auto;border:2px solid #fff;padding:12px;position:relative;min-height:640px;}
+  #gameContainer{width:960px;margin:18px auto;border:2px solid #fff;padding:12px;position:relative;min-height:700px;}
   .hp-bar{height:14px;background:#c33;border-radius:6px;overflow:hidden;margin-top:6px;}
   .hp-bar-inner{height:100%;background:linear-gradient(90deg,#f66,#a00);width:100%;}
   .player-wrap{display:flex;justify-content:space-between;gap:10px;margin-top:8px;}
@@ -14,13 +14,13 @@
   .player-card img{width:64px;height:64px;background:#222;display:block;margin:4px auto;border-radius:6px;object-fit:cover;}
   .small{font-size:12px;color:#ccc;}
   button{margin:6px;padding:6px 10px;border-radius:6px;cursor:pointer;}
-  #battleLog{background:#0d0d0d;height:180px;overflow:auto;padding:8px;border:1px solid #444;text-align:left;font-size:13px;margin-top:10px;}
-  .badge{display:inline-block;background:#222;padding:2px 6px;border-radius:6px;margin-left:6px;font-size:12px;}
+  #battleLog{background:#0d0d0d;height:220px;overflow:auto;padding:8px;border:1px solid #444;text-align:left;font-size:13px;margin-top:10px;}
+  .badge{display:inline-block;background:#222;padding:2px 6px;border-radius:6px;margin-left:6px;font-size:12px;color:#fff;}
   .stat-line{display:flex;justify-content:space-between;align-items:center;gap:8px;}
   .label{color:#bbb;font-size:13px;}
   .skill-info{margin-top:6px;color:#9f9;text-align:left;}
   .effect-badge{display:inline-block;background:#0a0;color:#fff;padding:2px 6px;border-radius:6px;margin-left:6px;font-size:12px;}
-  .damagePop{position:absolute;font-weight:800;color:#ffdddd;text-shadow:0 0 8px #f00;font-size:18px;z-index:1100;pointer-events:none;}
+  .damagePop{position:absolute;font-weight:800;color:#ffdddd;text-shadow:0 0 8px #f00;font-size:18px;z-index:1100;pointer-events:none}
 </style>
 </head>
 <body>
@@ -30,8 +30,8 @@
 // ---------- プレイヤー（全キャラをここに保持） ----------
 const players = [
   // 元からのキャラ
-  {id:"sakura", name:"サクラ", baseAtk:2000, hp:10000, maxHp:10000, skillTurn:2, currentTurn:0, skillReady:false, image:"", skillDesc:"敵のHP10%ダメ＆2T 攻撃200%UP", effects:[], barrier:0},
-  {id:"kana", name:"カナ", baseAtk:1400, hp:13000, maxHp:13000, skillTurn:4, currentTurn:0, skillReady:false, image:"", skillDesc:"味方全員攻撃110%UP＆HP800バリア", effects:[], barrier:0},
+  {id:"sakura", name:"サクラ", baseAtk:2000, hp:10000, maxHp:10000, skillTurn:2, currentTurn:0, skillReady:false, image:"", skillDesc:"敵のHP10%ダメ＆2T ATK×3", effects:[], barrier:0},
+  {id:"kana", name:"カナ", baseAtk:1400, hp:13000, maxHp:13000, skillTurn:4, currentTurn:0, skillReady:false, image:"", skillDesc:"味方全員ATK110%UP＆HP800バリア", effects:[], barrier:0},
   {id:"hina", name:"ヒナ", baseAtk:1900, hp:13000, maxHp:13000, skillTurn:17, currentTurn:0, skillReady:false, image:"", skillDesc:"合計ATKの500%ダメージ", effects:[], barrier:0},
   {id:"mika", name:"ミカ", baseAtk:1200, hp:10000, maxHp:10000, skillTurn:10, currentTurn:0, skillReady:false, image:"", skillDesc:"攻撃1540%（変更可）", effects:[], barrier:0},
   {id:"seina", name:"セイナ", baseAtk:1800, hp:14500, maxHp:14500, skillTurn:3, currentTurn:0, skillReady:false, image:"", skillDesc:"2T 吸収バリア", effects:[], barrier:0},
@@ -45,7 +45,7 @@ const players = [
   {id:"kanna", name:"カンナ", baseAtk:1100, hp:12000, maxHp:12000, skillTurn:3, currentTurn:0, skillReady:false, image:"", skillDesc:"自身と右側の味方ATK160%UP", effects:[], barrier:0},
 
   {id:"kuroko", name:"クロコ", baseAtk:1500, hp:16000, maxHp:16000, skillTurn:6, currentTurn:0, skillReady:false, image:"", skillDesc:"5T 不死身（会心倍率×3）＆全員ATK300%UP", effects:[], barrier:0},
-  {id:"marie", name:"マリー", baseAtk:900, hp:11000, maxHp:11000, skillTurn:3, currentTurn:0, skillReady:false, image:"", skillDesc:"味方スキルターン-1 & 2T HP1000バリア", effects:[], barrier:0},
+  {id:"marie", name:"マリー", baseAtk:900, hp:11000, maxHp:11000, skillTurn:3, currentTurn:0, skillReady:false, image:"", skillDesc:"味方チャージ+1 & 2T HP1000バリア", effects:[], barrier:0},
   {id:"nel", name:"ネル", baseAtk:1900, hp:9800, maxHp:9800, skillTurn:19, currentTurn:0, skillReady:false, image:"", skillDesc:"合計ATKの300%ダメ & 味方HP50%回復", effects:[], barrier:0},
   {id:"hoshino", name:"ホシノ", baseAtk:1500, hp:15000, maxHp:15000, skillTurn:5, currentTurn:0, skillReady:false, image:"", skillDesc:"3T 全員5000バリア & ATK170%UP", effects:[], barrier:0},
   {id:"seia", name:"セイア", baseAtk:1100, hp:15000, maxHp:15000, skillTurn:7, currentTurn:0, skillReady:false, image:"", skillDesc:"スキル持続+3T & 味方1人ATK140%UP", effects:[], barrier:0},
@@ -53,9 +53,16 @@ const players = [
   {id:"hina_d", name:"ヒナ(ドレス)", baseAtk:1300, hp:13000, maxHp:13000, skillTurn:17, currentTurn:0, skillReady:false, image:"", skillDesc:"18T 自身ATKが毎ターン+150%加算（蓄積）", effects:[], barrier:0},
   {id:"mika_b", name:"ミカ(水着)", baseAtk:1800, hp:15000, maxHp:15000, skillTurn:8, currentTurn:0, skillReady:false, image:"", skillDesc:"自身ATK3000%＆全員4T ATK200%UP＆会心確定4T", effects:[], barrier:0},
 
-{id:"hare", name:"ハレ", baseAtk:1100, hp:11000, maxHp:11000, skillTurn:2, currentTurn:0, skillReady:false, image:"", skillDesc:"1T 自身除く味方ATK130%UP", effects:[], barrier:0},
-    {id:"koharu", name:"コハル", baseAtk:750, hp:18500, maxHp:18500, skillTurn:2, currentTurn:0, skillReady:false, image:"", skillDesc:"1T 自身除く味方ATK130%UP & 受ダメ-10% & 条件回復", effects:[], barrier:0},
- ];
+  {id:"hare", name:"ハレ", baseAtk:1100, hp:11000, maxHp:11000, skillTurn:2, currentTurn:0, skillReady:false, image:"", skillDesc:"2T 自身除く味方ATK140%UP", effects:[], barrier:0},
+  {id:"koharu", name:"コハル", baseAtk:750, hp:18500, maxHp:18500, skillTurn:2, currentTurn:0, skillReady:false, image:"", skillDesc:"2T 自身除く味方ATK130%UP & 被ダメ-10% & 条件回復", effects:[], barrier:0},
+
+  // 新規追加（リクエスト分）
+  {id:"shiroko", name:"シロコ", baseAtk:1450, hp:12000, maxHp:12000, skillTurn:3, currentTurn:0, skillReady:false, image:"", skillDesc:"合計HPの250%ダメ(1回) & 全員HP40%回復", effects:[], barrier:0},
+  {id:"wakamo", name:"ワカモ", baseAtk:3000, hp:12000, maxHp:12000, skillTurn:10, currentTurn:0, skillReady:false, image:"", skillDesc:"攻撃時に合計ATKの100%追加 & 5T 会心率大幅↑", effects:[], barrier:0},
+  {id:"sakurako", name:"サクラコ", baseAtk:1000, hp:16000, maxHp:16000, skillTurn:10, currentTurn:0, skillReady:false, image:"", skillDesc:"10T 自身と右端の味方 会心倍率→3倍 & 全員HP70%回復", effects:[], barrier:0},
+  {id:"sena", name:"セナ", baseAtk:900, hp:20000, maxHp:20000, skillTurn:12, currentTurn:0, skillReady:false, image:"", skillDesc:"全員に合計ATK+HP の200%分を回復（分配）", effects:[], barrier:0},
+  {id:"toki", name:"トキ", baseAtk:1700, hp:12000, maxHp:12000, skillTurn:20, currentTurn:0, skillReady:false, image:"", skillDesc:"アビ・エシュフモード: 自身ATK/HP+40%", effects:[], barrier:0}
+];
 
 // 画像を localStorage から読み込む（保存してあれば復元）
 players.forEach(p=>{
@@ -196,6 +203,25 @@ function renderBattle(){
     if(p.guaranteedCrit && p.guaranteedCrit>0) extraBadges += `<span class="badge">会心確定:${p.guaranteedCrit}T</span>`;
     if(p.hinaDress && p.hinaDress.turns > 0) extraBadges += `<span class="badge">DressStacks:${p.hinaDress.stacks}</span>`;
 
+    // effects 配列の情報をバッジ表示にする
+    if (p.effects && p.effects.length) {
+      p.effects.forEach(e => {
+        if (e.type === 'atkMulti') {
+          extraBadges += `<span class="badge">ATK×${e.mult} (${e.turns}T)</span>`;
+        } else if (e.type === 'damageReduce') {
+          extraBadges += `<span class="badge">被ダメ-${Math.round(e.percent*100)}% (${e.turns}T)</span>`;
+        } else if (e.type === 'reflectMult') {
+          extraBadges += `<span class="badge">反撃×${e.mult} (${e.turns}T)</span>`;
+        } else if (e.type === 'critBoost') {
+          extraBadges += `<span class="badge">会心率↑ (${e.turns}T)</span>`;
+        } else if (e.type === 'critMult') {
+          extraBadges += `<span class="badge">会心倍率×${e.mult} (${e.turns}T)</span>`;
+        } else if (e.type === 'wakamo_extra') {
+          extraBadges += `<span class="badge">WAk:追加${Math.round(e.extraPercent*100)}%ATK (${e.turns}T)</span>`;
+        }
+      });
+    }
+
     card.innerHTML = `
       <img src="${p.image||''}" alt="${p.name}">
       <div style="text-align:center"><b>${p.name}</b> ${extraBadges}</div>
@@ -221,30 +247,49 @@ function computeAtk(p){
     });
   }
   if(p.hinaDress && p.hinaDress.stacks && p.hinaDress.stacks > 0){
-    // ドレスヒナの蓄積: stacks に応じて倍率加算（例：1スタックで +150%）
+    // ドレスヒナの蓄積: stacks に応じて倍率加算（1スタック +150%）
     mul *= (1 + 1.5 * p.hinaDress.stacks);
   }
   return Math.max(0, Math.floor(p.baseAtk * mul));
 }
 function tryCrit(p){
   if(p.guaranteedCrit && p.guaranteedCrit > 0) return true;
+  const cb = (p.effects || []).find(e=> e.type === 'critBoost');
+  if(cb) return Math.random() < (cb.chance || 0.6);
   return Math.random() < 0.15;
 }
 function doDamageVisual(dmg, isCrit=false){ popDamage(dmg, 420 + Math.random()*100, 120 + Math.random()*40, isCrit); }
 
-// ---------- 攻撃・スキル（簡易実装。挙動は左記 skillDesc に依存、必要なら個別拡張） ----------
+// ---------- 攻撃・スキル ----------
 function playerAttack(){
   if(selectedSlot === null || selectedSlot === undefined){ alert('攻撃する枠選べ'); return; }
   const pIdx = selectedPlayerIndexes[selectedSlot];
   const p = players[pIdx];
   const atk = computeAtk(p);
   const isCrit = tryCrit(p);
-  const critMult = isCrit ? 3.0 : 1.0;
-  const dmg = Math.floor(atk * critMult);
+  // 会心倍率：effects に critMult があれば優先
+  let critMult = 1.0;
+  if(isCrit){
+    const cm = (p.effects || []).find(e=> e.type === 'critMult');
+    critMult = cm ? cm.mult : 3.0;
+  }
+  const dmg = Math.floor(atk * (isCrit ? critMult : 1.0));
   currentEnemy.hp -= dmg;
   log(`${p.name}の通常攻撃！ 敵に ${dmg}ダメージ ${isCrit? '(会心!)':''}`, 'attack');
   doDamageVisual(dmg, isCrit);
 
+  // ワカモの「攻撃時追加ダメージ」効果がある場合、発動
+  const wak = (p.effects || []).find(e=> e.type === 'wakamo_extra');
+  if(wak){
+    // 合計ATK（出撃メンバーの現在ATK合計）
+    const totalAtk = selectedPlayerIndexes.reduce((s, idx) => s + computeAtk(players[idx]), 0);
+    const extra = Math.floor(totalAtk * (wak.extraPercent || 1.0));
+    currentEnemy.hp -= extra;
+    log(`${p.name}の追加効果！ 合計ATKの${Math.round((wak.extraPercent||1)*100)}% => ${extra} 追加ダメージ`, 'attack');
+    doDamageVisual(extra);
+  }
+
+  // 進行・敵行動
   advanceCharge();
   setTimeout(()=>{ enemyAction(); renderBattle(); checkBattleEnd(); }, 450);
   renderBattle();
@@ -263,12 +308,11 @@ function useSkill(){
 function useSkillFor(playerIndex, slotIndex){
   const p = players[playerIndex];
 
-  // 各スキルは簡略化して実装。必要なら細かく拡張します。
   if(p.id === 'sakura'){
     const dmg = Math.floor(currentEnemy.hp * 0.10);
     currentEnemy.hp -= dmg;
     selectedPlayerIndexes.forEach(idx=> players[idx].effects.push({type:'atkMulti', mult:3.0, turns:2}));
-    log(`サクラ: 敵に${dmg}ダメージ。味方ATK+200% 2T`, 'attack');
+    log(`サクラ: 敵に${dmg}ダメージ。味方ATK×3 2T`, 'attack');
     doDamageVisual(dmg);
   } else if(p.id === 'kana'){
     selectedPlayerIndexes.forEach(idx=>{ players[idx].effects.push({type:'atkMulti', mult:1.1, turns:2}); players[idx].barrier += 800; });
@@ -279,9 +323,9 @@ function useSkillFor(playerIndex, slotIndex){
     currentEnemy.hp -= dmg;
     log(`ヒナ: ${dmg}ダメージ`, 'attack'); doDamageVisual(dmg);
   } else if(p.id === 'hina_d'){
-    // ドレスヒナ：スタック蓄積型
+    // ドレスヒナ：スタック蓄積型（18T、毎ターンステップで stacks++）
     p.hinaDress = { turns:18, stacks:0 };
-    log('ヒナ(ドレス): 終幕・イシュボルテ発動！18T、毎ターンATKが加算される（+150%/ターン）', 'attack');
+    log('ヒナ(ドレス): 終幕・イシュボルテ発動！18T、毎ターンATKが+150%ずつ増加（蓄積）', 'attack');
   } else if(p.id === 'mika'){
     const dmg = Math.floor(p.baseAtk * 15.4);
     currentEnemy.hp -= dmg;
@@ -299,7 +343,6 @@ function useSkillFor(playerIndex, slotIndex){
     selectedPlayerIndexes.forEach(idx=>{ const t = players[idx]; const healAmt = Math.floor(t.maxHp * 0.70); t.hp = Math.min(t.maxHp, t.hp + healAmt); t.effects.push({type:'atkMulti', mult:3.0, turns:3}); });
     log('ココナ: 味方HP70%回復 & 3T ATK200%UP', 'heal');
   } else if(p.id === 'ui'){
-    // ウイ: 残りターンを2短縮（currentTurn を +2）
     selectedPlayerIndexes.forEach(idx => {
       const t = players[idx];
       t.currentTurn = Math.min(t.skillTurn, t.currentTurn + 2);
@@ -309,47 +352,39 @@ function useSkillFor(playerIndex, slotIndex){
   } else if(p.id === 'kuroko'){
     selectedPlayerIndexes.forEach(idx=>{ players[idx].undead = true; players[idx].undeadTurn = 5; players[idx].effects.push({type:'atkMulti', mult:4.0, turns:5}); });
     log('クロコ: 5T 不死身 & 全員ATK300%UP', 'heal');
-  } else if (p.id === 'hare') {  
-    // 味方ATK140％UP（持続2ターン） 
+  } else if(p.id === 'hare'){
+    // ハレ: 自分以外の味方にATK×1.4を2ターン付与
     selectedPlayerIndexes.forEach(idx => {
-    const t = players[idx];
-    if (t.id !== 'hare') { // 自分以外
-    // 攻撃力UP
-    t.atkBuffTurns = 2;
-    t.atkBuffMultiplier = 1.4;
-    log(`ハレ: ${t.name} のATKを140％UP（2ターン）`, 'buff');
-    }
+      const t = players[idx];
+      if (t !== p) {
+        t.effects.push({type:'atkMulti', mult:1.4, turns:2});
+      }
     });
-    log('ハレ: 味方ATK140％UP（2ターン）を付与', 'buff');
-  } else if (p.id === 'marie') {
-    // スキルチャージ +2 & バリア+1000
+    log('ハレ: 味方ATK+40%（×1.4）を2T（自身除く）', 'buff');
+  } else if(p.id === 'marie'){
+    // マリー: 味方チャージ+1 & バリア+1000（スキルターン-1は削除済み）
     selectedPlayerIndexes.forEach(idx => {
-    const t = players[idx];
-    t.currentTurn = Math.min(t.skillTurn, t.currentTurn + 1);
-    t.skillReady = (t.currentTurn >= t.skillTurn);
-    t.barrier += 1000;
+      const t = players[idx];
+      t.currentTurn = Math.min(t.skillTurn, t.currentTurn + 1);
+      t.skillReady = (t.currentTurn >= t.skillTurn);
+      t.barrier += 1000;
     });
-    log('マリー: 味方全員のスキル+2 & HP1000バリア', 'heal');
-  } else if (p.id === 'koharu') { 
-    // 味方ATK130％UP＆被ダメ10％減少＆HP50％以下の味方60%回復（持続2ターン）
+    log('マリー: 味方全員のチャージ+1 & HP1000バリア', 'heal');
+  } else if(p.id === 'koharu'){
+    // コハル: 自分以外の味方にATK×1.3、被ダメ-10%を2T付与。HP50%以下は60%回復
     selectedPlayerIndexes.forEach(idx => {
-    const t = players[idx];
-    if (t.id !== 'koharu') {
-    // 攻撃力UP
-    t.atkBuffTurns = 2;
-    t.atkBuffMultiplier = 1.3;
-    // 被ダメ減少
-    t.damageReductionTurns = 2;
-    t.damageReductionPercent = 0.10;
-    // HP50％以下の味方を回復
-    if (t.hp <= t.maxHp * 0.5) {
-    const healAmount = Math.floor(t.maxHp * 0.6);
-    t.hp = Math.min(t.maxHp, t.hp + healAmount);
-    log(`コハル: ${t.name} を ${healAmount} 回復`, 'heal');
-    }
-    }
+      const t = players[idx];
+      if (t !== p) {
+        t.effects.push({type:'atkMulti', mult:1.3, turns:2});
+        t.effects.push({type:'damageReduce', percent:0.10, turns:2});
+        if (t.hp <= t.maxHp * 0.5) {
+          const healAmount = Math.floor(t.maxHp * 0.6);
+          t.hp = Math.min(t.maxHp, t.hp + healAmount);
+          log(`コハル: ${t.name} を ${healAmount} 回復`, 'heal');
+        }
+      }
     });
-    log('コハル: 味方ATK130％UP＆被ダメ10％減少（2T）＆HP50％以下を回復', 'buff');
+    log('コハル: 味方ATK+30%（×1.3）＆被ダメ-10%（2T）＆HP50%以下を回復', 'buff');
   } else if(p.id === 'nel'){
     const totalAtk = selectedPlayerIndexes.reduce((s,idx)=> s + computeAtk(players[idx]), 0);
     const dmg = Math.floor(totalAtk * 3.0);
@@ -367,15 +402,60 @@ function useSkillFor(playerIndex, slotIndex){
     log(`イヲリ: ${dmg}ダメージ`, 'attack'); doDamageVisual(dmg);
   } else if(p.id === 'seia'){
     selectedPlayerIndexes.forEach(idx=>{ players[idx].effects.forEach(e=> e.turns += 3); });
-    const targetSlot = (selectedSlot === 0)?1:((selectedSlot === 1)?2:0);
+    const targetSlot = (slotIndex === 0)?1:((slotIndex === 1)?2:0);
     const tIdx = selectedPlayerIndexes[targetSlot];
     if(tIdx !== undefined){ players[tIdx].effects.push({type:'atkMulti', mult:2.4, turns:3}); log('セイア: スキル持続+3 & 対象ATK140%UP 3T','heal'); }
     else log('セイア: 対象がいない','normal');
   } else if(p.id === 'hoshino'){
     selectedPlayerIndexes.forEach(idx=>{ players[idx].barrier += 5000; players[idx].effects.push({type:'atkMulti', mult:2.7, turns:3}); });
     log('ホシノ: 全員に5000バリア & ATK170%UP 3T', 'heal');
+  } else if(p.id === 'shiroko'){
+    // シロコ: 合計HPの250%ダメージ（単発） + 全員HP40%回復
+    const totalMaxHP = selectedPlayerIndexes.reduce((s,idx)=> s + players[idx].maxHp, 0);
+    const dmg = Math.floor(totalMaxHP * 2.5);
+    currentEnemy.hp = Math.max(0, currentEnemy.hp - dmg);
+    selectedPlayerIndexes.forEach(idx => {
+      const t = players[idx];
+      const healAmount = Math.floor(t.maxHp * 0.4);
+      t.hp = Math.min(t.maxHp, t.hp + healAmount);
+    });
+    log(`シロコ: 合計HPの250% (${dmg}) のダメージ & 全員HP40%回復`, 'attack');
+    doDamageVisual(dmg);
+  } else if(p.id === 'wakamo'){
+    // ワカモ: 5T 会心率大幅↑ & 攻撃時に合計ATKの100%追加（効果を5T付与）
+    p.effects.push({type:'wakamo_extra', extraPercent:1.0, turns:5});
+    p.effects.push({type:'critBoost', chance:0.6, turns:5});
+    log('ワカモ: 5T 会心率大幅↑ & 攻撃時に合計ATKの100%追加（5T）', 'buff');
+  } else if(p.id === 'sakurako'){
+    // サクラコ: 自身と右端の味方の会心ダメージ倍率を3倍に（10T）。全員HP70%回復
+    const rightSlot = selectedPlayerIndexes.length - 1;
+    selectedPlayerIndexes.forEach((idx, slot) => {
+      const t = players[idx];
+      if(slot === rightSlot || slot === slotIndex){
+        t.effects.push({type:'critMult', mult:3.0, turns:10});
+      }
+      const healAmount = Math.floor(t.maxHp * 0.7);
+      t.hp = Math.min(t.maxHp, t.hp + healAmount);
+    });
+    log('サクラコ: 自身と右端の味方 会心倍率→3倍(10T)＆全員HP70%回復', 'heal');
+  } else if(p.id === 'sena'){
+    // セナ: 合計(現在ATKの合計 + 現在HPの合計) *2 を全体で分配して回復
+    const totalAtk = selectedPlayerIndexes.reduce((s, idx) => s + computeAtk(players[idx]), 0);
+    const totalHp = selectedPlayerIndexes.reduce((s, idx) => s + players[idx].hp, 0);
+    const healTotal = Math.floor((totalAtk + totalHp) * 2.0);
+    const per = Math.floor(healTotal / selectedPlayerIndexes.length);
+    selectedPlayerIndexes.forEach(idx=>{
+      const t = players[idx];
+      t.hp = Math.min(t.maxHp, t.hp + per);
+    });
+    log(`セナ: 全員に合計ATK+HPの200% 分（合計 ${healTotal}）を分配回復`, 'heal');
+  } else if(p.id === 'toki'){
+    // トキ: アビ・エシュフモード — 自身ATK/HPを40%増加（恒久的な変更）
+    p.baseAtk = Math.floor(p.baseAtk * 1.4);
+    p.maxHp = Math.floor(p.maxHp * 1.4);
+    p.hp = Math.min(p.maxHp, Math.floor(p.hp * 1.4));
+    log('トキ: アビ・エシュフモード発動！自身ATK/HPを40%増加', 'buff');
   } else {
-    // 未実装スキルの多いキャラは「未実装」ログにするが、キャラは消さない
     log(`${p.name} のスキル（詳細）は未実装だよ。`, 'normal');
   }
 
@@ -402,10 +482,25 @@ function enemyAction(){
         else { dmg -= t.barrier; t.barrier = 0; }
       }
       if(dmg>0){
+        // 被ダメ軽減（effects に damageReduce があれば適用）
+        const dr = t.effects && t.effects.find(e=> e.type === 'damageReduce');
+        if(dr){
+          const before = dmg;
+          dmg = Math.ceil(dmg * (1 - dr.percent));
+          log(`${t.name} の被ダメ軽減: ${before} → ${dmg}`, 'heal');
+        }
+
         const reflect = t.effects.find(e=> e.type === 'reflectMult');
-        if(reflect){ const refD = Math.floor(dmg * reflect.mult); currentEnemy.hp -= refD; log(`${t.name}が反撃！ ${refD}を返した！`, 'attack'); doDamageVisual(refD); }
+        if(reflect){
+          const refD = Math.floor(dmg * reflect.mult);
+          currentEnemy.hp -= refD;
+          log(`${t.name}が反撃！ ${refD}を返した！`, 'attack');
+          doDamageVisual(refD);
+        }
+
         t.hp = Math.max(0, t.hp - dmg);
-        log(`${currentEnemy.name} が ${t.name} に ${dmg}ダメージ`, 'attack'); doDamageVisual(dmg);
+        log(`${currentEnemy.name} が ${t.name} に ${dmg}ダメージ`, 'attack');
+        doDamageVisual(dmg);
       }
     }
   } else if(a === 'aoe'){
@@ -414,7 +509,26 @@ function enemyAction(){
       else if(t.absorb && t.absorbTurn>0){ t.hp = Math.min(t.maxHp, t.hp + dmg); log(`${t.name}の吸収が${dmg}をHPに変換！`, 'heal'); doDamageVisual(dmg); }
       else {
         if(t.barrier > 0){ if(dmg <= t.barrier){ t.barrier -= dmg; log(`${t.name}のバリアが${dmg}吸収！ 残:${t.barrier}`); dmg = 0; } else { dmg -= t.barrier; t.barrier = 0; } }
-        if(dmg>0){ const reflect = t.effects.find(e=> e.type === 'reflectMult'); if(reflect){ const refD = Math.floor(dmg * reflect.mult); currentEnemy.hp -= refD; log(`${t.name}が反撃！ ${refD}`,'attack'); doDamageVisual(refD); } t.hp = Math.max(0, t.hp - dmg); }
+        if(dmg>0){
+          // 被ダメ軽減チェック
+          const dr = t.effects && t.effects.find(e=> e.type === 'damageReduce');
+          if(dr){
+            const before = dmg;
+            dmg = Math.ceil(dmg * (1 - dr.percent));
+            log(`${t.name} の被ダメ軽減: ${before} → ${dmg}`, 'heal');
+          }
+
+          const reflect = t.effects.find(e=> e.type === 'reflectMult');
+          if(reflect){
+            const refD = Math.floor(dmg * reflect.mult);
+            currentEnemy.hp -= refD;
+            log(`${t.name}が反撃！ ${refD}`, 'attack');
+            doDamageVisual(refD);
+          }
+
+          t.hp = Math.max(0, t.hp - dmg);
+          doDamageVisual(dmg);
+        }
       }
     });
     log(`${currentEnemy.name} の全体攻撃！`, 'attack'); playSmallEffect();
@@ -422,7 +536,7 @@ function enemyAction(){
     currentEnemy.atk = Math.floor(currentEnemy.atk * 1.12);
     log(`${currentEnemy.name} が攻撃上昇！`, 'attack');
   } else if(a === 'healRare'){
-    // 敵の回復頻度と量を増やす（リクエストに応じて強化）
+    // 敵の回復頻度と量を増やす（強化）
     if(Math.random() < 0.65){
       const heal = Math.floor(currentEnemy.maxHp * 0.12);
       currentEnemy.hp = Math.min(currentEnemy.maxHp, currentEnemy.hp + heal);
@@ -454,6 +568,8 @@ function enemyAction(){
     }
     if(p.barrier && p.barrier < 0) p.barrier = 0;
   });
+
+  turnCount++;
 }
 
 // ---------- 更新等 ----------
